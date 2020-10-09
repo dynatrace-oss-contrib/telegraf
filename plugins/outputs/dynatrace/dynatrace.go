@@ -223,10 +223,10 @@ func (d *Dynatrace) Write(metrics []telegraf.Metric) error {
 	}
 	sent++
 	// in typical interval of 10s, we will clean the counter state once in 24h which is 8640 iterations
+
 	if sent%8640 == 0 {
 		counts = make(map[string]string)
 	}
-	fmt.Println(string(buf.Bytes()))
 	return d.send(buf.Bytes())
 }
 
