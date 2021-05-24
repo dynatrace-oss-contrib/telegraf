@@ -20,18 +20,20 @@ import (
 
 // Dynatrace Configuration for the Dynatrace output plugin
 type Dynatrace struct {
-	URL               string          `toml:"url"`
-	APIToken          string          `toml:"api_token"`
-	Prefix            string          `toml:"prefix"`
-	Log               telegraf.Logger `toml:"-"`
-	Timeout           config.Duration `toml:"timeout"`
-	AddCounterMetrics []string        `toml:"additional_counters"`
+	URL               string            `toml:"url"`
+	APIToken          string            `toml:"api_token"`
+	Prefix            string            `toml:"prefix"`
+	Log               telegraf.Logger   `toml:"-"`
+	Timeout           config.Duration   `toml:"timeout"`
+	AddCounterMetrics []string          `toml:"additional_counters"`
+	DefaultDimensions map[string]string `toml:"default_dimensions"`
 
 	tls.ClientConfig
 
 	client *http.Client
 
-	loggedMetrics map[string]bool // New empty set
+	loggedMetrics               map[string]bool // New empty set
+	normalizedDefaultDimensions dimensions.NormalizedDimensionList
 }
 
 const sampleConfig = `
@@ -67,6 +69,9 @@ const sampleConfig = `
 
   ## If you want to convert values represented as gauges to counters, add the metric names here
   additional_counters = [ ]
+
+  ## Default dimensions will be normalized and added to every exported metric
+  default_dimensions = { }
 `
 
 // Connect Connects the Dynatrace output plugin to the Telegraf stream
@@ -140,7 +145,7 @@ func (d *Dynatrace) Write(metrics []telegraf.Metric) error {
 				dtMetric.WithPrefix(d.Prefix),
 				dtMetric.WithDimensions(
 					dimensions.MergeLists(
-						// dimensions.NewNormalizedDimensionList(e.opts.DefaultDimensions...),
+						d.normalizedDefaultDimensions,
 						dimensions.NewNormalizedDimensionList(dims...),
 					),
 				),
@@ -236,6 +241,14 @@ func (d *Dynatrace) Init() error {
 		},
 		Timeout: time.Duration(d.Timeout),
 	}
+
+	defaultDimensionList := []dimensions.Dimension{}
+	for key, val := range d.DefaultDimensions {
+		defaultDimensionList = append(defaultDimensionList, dimensions.NewDimension(key, val))
+	}
+
+	d.normalizedDefaultDimensions = dimensions.NewNormalizedDimensionList(defaultDimensionList...)
+
 	return nil
 }
 

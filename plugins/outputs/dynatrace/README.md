@@ -37,6 +37,10 @@ You will also need to configure an API token for secure access. Find out how to 
   insecure_skip_verify = false
   ## If you want to convert values represented as gauges to counters, add the metric names here
   additional_counters = [ ]
+  ## Default dimensions will be added to every exported metric
+  default_dimensions = {
+    # key = "value"
+  }
 
 ```
 

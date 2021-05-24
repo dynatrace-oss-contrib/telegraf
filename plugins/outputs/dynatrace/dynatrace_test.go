@@ -212,6 +212,51 @@ func TestSendSingleMetricWithUnorderedTags(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSendMetricWithDefaultdimensions(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		// check the encoded result
+		bodyBytes, err := ioutil.ReadAll(r.Body)
+		require.NoError(t, err)
+		bodyString := string(bodyBytes)
+		expected := "mymeasurement.myfield,default=\\\"quoted\\ value\\\" gauge,3.14"
+		if bodyString != expected {
+			t.Errorf("Metric encoding failed. expected: %#v but got: %#v", expected, bodyString)
+		}
+		err = json.NewEncoder(w).Encode(`{"linesOk":1,"linesInvalid":0,"error":null}`)
+		require.NoError(t, err)
+	}))
+	defer ts.Close()
+
+	d := &Dynatrace{
+		DefaultDimensions: map[string]string{
+			"default": `"quoted value"`,
+		},
+	}
+
+	d.URL = ts.URL
+	d.APIToken = "123"
+	d.Log = testutil.Logger{}
+	err := d.Init()
+	require.NoError(t, err)
+	err = d.Connect()
+	require.NoError(t, err)
+
+	// Init metrics
+
+	m1 := metric.New(
+		"mymeasurement",
+		map[string]string{},
+		map[string]interface{}{"myfield": float64(3.14)},
+		time.Date(2010, time.November, 10, 23, 0, 0, 0, time.UTC),
+	)
+
+	metrics := []telegraf.Metric{m1}
+
+	err = d.Write(metrics)
+	require.NoError(t, err)
+}
+
 func TestSendMetricWithoutTags(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
