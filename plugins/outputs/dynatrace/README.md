@@ -13,7 +13,7 @@ You will either need a Dynatrace OneAgent (version 1.201 or higher) installed on
 
 Setting up Telegraf is explained in the [Telegraf Documentation](https://docs.influxdata.com/telegraf/latest/introduction/getting-started/).
 The Dynatrace exporter may be enabled by adding an `[[outputs.dynatrace]]` section to your `telegraf.conf` config file.
-All configurations are optional, but if a `url` is specified then an `api_token` is required.
+All configurations are optional, but if a `url` other than the OneAgent metric ingestion endpoint is specified then an `api_token` is required.
 To see all available options, see [Configuration](#configuration) below.
 
 ### Running alongside Dynatrace OneAgent
@@ -58,6 +58,7 @@ You can learn more about how to use the Dynatrace API [here](https://www.dynatra
 ### `url`
 
 *required*: `false`
+
 *default*: Local OneAgent endpoint
 
 Set your Dynatrace environment URL (e.g.: `https://{your-environment-id}.live.dynatrace.com/api/v2/metrics/ingest`) if you do not use a OneAgent or wish to export metrics directly to a Dynatrace metrics v2 endpoint. If a URL is set to anything other than the local OneAgent endpoint, then an API token is required.
