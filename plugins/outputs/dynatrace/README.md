@@ -91,7 +91,7 @@ prefix = "telegraf"
 
 *required*: `false`
 
-Setting this option to true skips TLS verification for testing or within local environments.
+Setting this option to true skips TLS verification for testing or when using self-signed certificates.
 
 ```toml
 insecure_skip_verify = false
